@@ -2,10 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 
-
-
-
-
 Future<void> main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
@@ -69,10 +65,20 @@ class _MyHomePageState extends State<MyHomePage> {
               height: 140.0,
             ),
             Container(
-              child: Center(child: Text("Inventory Management System", style: TextStyle(fontSize: 45,color: Color.fromRGBO(0, 0, 128, 10)),)),
+              child: Center(
+                  child: Text(
+                "Inventory Management System",
+                style: TextStyle(
+                    fontSize: 45, color: Color.fromRGBO(0, 0, 128, 10)),
+              )),
             ),
-            Container(child: Image.asset('/Users/deepanshsaxena/AndroidStudioProjects/inventory_management_system/lib/hrc.png',height: 300,width: 300,),),
-
+            Container(
+              child: Image.asset(
+                'lib/hrc.png',
+                height: 300,
+                width: 300,
+              ),
+            ),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 40),
               child: TextField(
@@ -81,21 +87,21 @@ class _MyHomePageState extends State<MyHomePage> {
                 onChanged: (value) {
                   //Do something with the user input.
                 },
-                decoration: InputDecoration(filled: true,fillColor: Colors.white60,
+                decoration: InputDecoration(
+                  filled: true,
+                  fillColor: Colors.white60,
                   hintText: 'Enter your email',
                   contentPadding:
-                  EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
+                      EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.all(Radius.circular(32.0)),
                   ),
                   enabledBorder: OutlineInputBorder(
-                    borderSide:
-                    BorderSide(color: Colors.black, width: 1.0),
+                    borderSide: BorderSide(color: Colors.black, width: 1.0),
                     borderRadius: BorderRadius.all(Radius.circular(32.0)),
                   ),
                   focusedBorder: OutlineInputBorder(
-                    borderSide:
-                    BorderSide(color: Colors.black, width: 2.0),
+                    borderSide: BorderSide(color: Colors.black, width: 2.0),
                     borderRadius: BorderRadius.all(Radius.circular(32.0)),
                   ),
                 ),
@@ -112,21 +118,21 @@ class _MyHomePageState extends State<MyHomePage> {
                 onChanged: (value) {
                   //Do something with the user input.
                 },
-                decoration: InputDecoration(filled: true,fillColor: Colors.white60,
+                decoration: InputDecoration(
+                  filled: true,
+                  fillColor: Colors.white60,
                   hintText: 'Enter your password',
                   contentPadding:
-                  EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
+                      EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.all(Radius.circular(32.0)),
                   ),
                   enabledBorder: OutlineInputBorder(
-                    borderSide:
-                    BorderSide(color: Colors.black, width: 1.0),
+                    borderSide: BorderSide(color: Colors.black, width: 1.0),
                     borderRadius: BorderRadius.all(Radius.circular(32.0)),
                   ),
                   focusedBorder: OutlineInputBorder(
-                    borderSide:
-                    BorderSide(color: Colors.black, width: 2.0),
+                    borderSide: BorderSide(color: Colors.black, width: 2.0),
                     borderRadius: BorderRadius.all(Radius.circular(32.0)),
                   ),
                 ),
@@ -147,12 +153,14 @@ class _MyHomePageState extends State<MyHomePage> {
                   },
                   minWidth: 330.0,
                   height: 42.0,
-                  child: Text(style: TextStyle(color: Color.fromRGBO(0, 0, 128, 10)),
+                  child: Text(
+                    style: TextStyle(color: Color.fromRGBO(0, 0, 128, 10)),
                     'Log In',
                   ),
                 ),
               ),
-            ), SizedBox(
+            ),
+            SizedBox(
               height: 24.0,
             ),
           ],
