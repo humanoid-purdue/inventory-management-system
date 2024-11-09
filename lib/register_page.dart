@@ -1,7 +1,8 @@
-import 'package:firebase_auth/firebase_auth.dart';
+// register_page.dart
 import 'package:flutter/material.dart';
-import 'package:inventory_management_system/homepage.dart';
-import 'package:inventory_management_system/main.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'homepage.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key, required this.title});
@@ -13,171 +14,157 @@ class RegisterPage extends StatefulWidget {
 }
 
 class _RegisterPageState extends State<RegisterPage> {
-  int _counter = 0;
+  String emailAddress = '';
+  String password = '';
+  String name = '';
 
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
-    });
-  }
-
-  Future<void> register(String emailAddress, String password) async {
+  Future<void> registerUser(String email, String password, String name) async {
     try {
-      final credential = await FirebaseAuth.instance
-          .createUserWithEmailAndPassword(
-              email: emailAddress, password: password);
-      print('account created');
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text("Registered Successfully!"),
-      ));
-    } on FirebaseAuthException catch (e) {
-      if (e.code == 'user-not-found') {
-        print('No user found for that email.');
-      } else if (e.code == 'wrong-password') {
-        print('Wrong password provided for that user.');
+      // Create user with Firebase Auth
+      final UserCredential userCredential = await FirebaseAuth.instance
+          .createUserWithEmailAndPassword(email: email, password: password);
+
+      final User? user = userCredential.user;
+
+      if (user != null) {
+        // Store user details in Firestore
+        await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
+          'email': email,
+          'name': name,
+          'isAdmin': false,
+          'checkedOutItems': [],
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Registration Successful!")),
+        );
+
+        // Navigate to homepage after registration
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const HomePage()),
+        );
       }
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'weak-password') {
+        print('The password provided is too weak.');
+      } else if (e.code == 'email-already-in-use') {
+        print('An account already exists for that email.');
+      }
+    } catch (e) {
+      print(e);
     }
   }
 
-  String emailAddress = '';
-  String password = '';
-
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
     return Scaffold(
       backgroundColor: Colors.white,
       body: SingleChildScrollView(
         child: Column(
+          mainAxisSize: MainAxisSize.max,
+          mainAxisAlignment: MainAxisAlignment.start,
           children: [
-            SizedBox(
-              height: 140.0,
-            ),
-            Container(
-              child: Center(
-                  child: Text(
-                "Inventory Management System",
+            const SizedBox(height: 100),
+            const Center(
+              child: Text(
+                "Register Account",
                 style: TextStyle(
-                    fontSize: 45, color: Color.fromRGBO(0, 0, 128, 10)),
-              )),
-            ),
-            Container(
-              child: Image.asset(
-                'lib/hrc.png',
-                height: 300,
-                width: 300,
+                  fontSize: 40,
+                  fontWeight: FontWeight.bold,
+                  color: Color.fromRGBO(0, 0, 128, 1),
+                ),
               ),
             ),
+            const SizedBox(height: 20),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 40),
+              child: TextField(
+                textAlign: TextAlign.center,
+                onChanged: (value) => name = value,
+                decoration: InputDecoration(
+                  filled: true,
+                  fillColor: Colors.grey[200],
+                  hintText: 'Enter your name',
+                  contentPadding: const EdgeInsets.symmetric(
+                    vertical: 14.0,
+                    horizontal: 20.0,
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(32.0),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 40),
               child: TextField(
                 textAlign: TextAlign.center,
                 keyboardType: TextInputType.emailAddress,
-                onChanged: (value) {
-                  emailAddress = value;
-                },
+                onChanged: (value) => emailAddress = value,
                 decoration: InputDecoration(
                   filled: true,
-                  fillColor: Colors.white60,
+                  fillColor: Colors.grey[200],
                   hintText: 'Enter your email',
-                  contentPadding:
-                      EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
+                  contentPadding: const EdgeInsets.symmetric(
+                    vertical: 14.0,
+                    horizontal: 20.0,
+                  ),
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.all(Radius.circular(32.0)),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: Colors.black, width: 1.0),
-                    borderRadius: BorderRadius.all(Radius.circular(32.0)),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: Colors.black, width: 2.0),
-                    borderRadius: BorderRadius.all(Radius.circular(32.0)),
+                    borderRadius: BorderRadius.circular(32.0),
+                    borderSide: BorderSide.none,
                   ),
                 ),
               ),
             ),
-            SizedBox(
-              height: 8.0,
-            ),
+            const SizedBox(height: 16),
             Padding(
-              padding: EdgeInsets.symmetric(horizontal: 40),
+              padding: const EdgeInsets.symmetric(horizontal: 40),
               child: TextField(
                 textAlign: TextAlign.center,
                 obscureText: true,
-                onChanged: (value) {
-                  password = value;
-                },
+                onChanged: (value) => password = value,
                 decoration: InputDecoration(
                   filled: true,
-                  fillColor: Colors.white60,
+                  fillColor: Colors.grey[200],
                   hintText: 'Enter your password',
-                  contentPadding:
-                      EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
+                  contentPadding: const EdgeInsets.symmetric(
+                    vertical: 14.0,
+                    horizontal: 20.0,
+                  ),
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.all(Radius.circular(32.0)),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: Colors.black, width: 1.0),
-                    borderRadius: BorderRadius.all(Radius.circular(32.0)),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: Colors.black, width: 2.0),
-                    borderRadius: BorderRadius.all(Radius.circular(32.0)),
+                    borderRadius: BorderRadius.circular(32.0),
+                    borderSide: BorderSide.none,
                   ),
                 ),
               ),
             ),
-            SizedBox(
-              height: 42.0,
-            ),
-            InkWell(
-              child: new Text("Already have an account? Log in."),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => HomePage()),
-                );
-              },
-            ),
-            SizedBox(
-              height: 42.0,
-            ),
+            const SizedBox(height: 30),
             Padding(
-              padding: EdgeInsets.symmetric(vertical: 2.0),
+              padding: const EdgeInsets.symmetric(vertical: 2.0),
               child: Material(
-                color: Color.fromRGBO(255, 188, 33, 10),
-                borderRadius: BorderRadius.all(Radius.circular(32.0)),
+                color: const Color.fromRGBO(255, 188, 33, 1),
+                borderRadius: BorderRadius.circular(32.0),
                 elevation: 5.0,
                 child: MaterialButton(
-                  onPressed: () {
-                    print('pressed');
-                    register(emailAddress, password);
-                  },
+                  onPressed: () => registerUser(emailAddress, password, name),
                   minWidth: 330.0,
                   height: 42.0,
-                  child: Text(
-                    style: TextStyle(color: Color.fromRGBO(0, 0, 128, 10)),
-                    'Create Account',
+                  child: const Text(
+                    'Register',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18,
+                    ),
                   ),
                 ),
               ),
             ),
-            SizedBox(
-              height: 24.0,
-            ),
+            const SizedBox(height: 20),
           ],
-          mainAxisSize: MainAxisSize.max,
-          mainAxisAlignment: MainAxisAlignment.start,
         ),
       ),
     );
