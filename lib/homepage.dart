@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:inventory_management_system/main.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'objects/item.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -9,132 +10,154 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  // Variables to hold selected item and action
+  String selectedAction = 'borrow';
+
+  // Lists of predefined actions
+  final List<String> actions = ['borrow', 'add', 'use'];
+
+  // List of items fetched from Firestore
+  List<Item> items = [];
+  Item? selectedItem;
+
+  @override
+  void initState() {
+    super.initState();
+    fetchItems();
+  }
+
+  // Fetch items from Firestore
+  Future<void> fetchItems() async {
+    final snapshot = await FirebaseFirestore.instance.collection('items').get();
+    setState(() {
+      items = snapshot.docs.map((doc) {
+        return Item(
+          uid: doc.id,
+          name: doc['name'],
+          bin: doc['bin'],
+          building: doc['building'],
+          quantity: doc['quantity'],
+          logs: [], // Modify as needed for actual log handling
+        );
+      }).toList();
+      selectedItem = items.isNotEmpty ? items[0] : null;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
       body: SingleChildScrollView(
         child: Column(
-          children: [
-            SizedBox(
-              height: 140.0,
-            ),
-            Container(
-              child: Center(
-                  child: Text(
-                    "Inventory Management System",
-                    style: TextStyle(
-                        fontSize: 45, color: Color.fromRGBO(0, 0, 128, 10)),
-                  )),
-            ),
-            Container(
-              child: Image.asset(
-                'lib/hrc.png',
-                height: 300,
-                width: 300,
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 40),
-              child: TextField(
-                textAlign: TextAlign.center,
-                keyboardType: TextInputType.emailAddress,
-                onChanged: (value) {
-                },
-                decoration: InputDecoration(
-                  filled: true,
-                  fillColor: Colors.white60,
-                  hintText: 'Enter your email',
-                  contentPadding:
-                  EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.all(Radius.circular(32.0)),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: Colors.black, width: 1.0),
-                    borderRadius: BorderRadius.all(Radius.circular(32.0)),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: Colors.black, width: 2.0),
-                    borderRadius: BorderRadius.all(Radius.circular(32.0)),
-                  ),
-                ),
-              ),
-            ),
-            SizedBox(
-              height: 8.0,
-            ),
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 40),
-              child: TextField(
-                textAlign: TextAlign.center,
-                obscureText: true,
-                onChanged: (value) {
-                },
-                decoration: InputDecoration(
-                  filled: true,
-                  fillColor: Colors.white60,
-                  hintText: 'Enter your password',
-                  contentPadding:
-                  EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.all(Radius.circular(32.0)),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: Colors.black, width: 1.0),
-                    borderRadius: BorderRadius.all(Radius.circular(32.0)),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: Colors.black, width: 2.0),
-                    borderRadius: BorderRadius.all(Radius.circular(32.0)),
-                  ),
-                ),
-              ),
-            ),
-            SizedBox(
-              height: 42.0,
-            ),
-            InkWell(
-              child: new Text("Admin Panel"),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => MyHomePage(
-                        title: "Register Page",
-                      )),
-                );
-              },
-            ),
-            SizedBox(
-              height: 42.0,
-            ),
-            Padding(
-              padding: EdgeInsets.symmetric(vertical: 2.0),
-              child: Material(
-                color: Color.fromRGBO(255, 188, 33, 10),
-                borderRadius: BorderRadius.all(Radius.circular(32.0)),
-                elevation: 5.0,
-                child: MaterialButton(
-                  onPressed: () {
-                    print('pressed');
-                  },
-                  minWidth: 330.0,
-                  height: 42.0,
-                  child: Text(
-                    style: TextStyle(color: Color.fromRGBO(0, 0, 128, 10)),
-                    'Log In',
-                  ),
-                ),
-              ),
-            ),
-            SizedBox(
-              height: 24.0,
-            ),
-          ],
           mainAxisSize: MainAxisSize.max,
           mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            const SizedBox(height: 100.0),
+            const Center(
+              child: Text(
+                "Inventory Management System",
+                style: TextStyle(
+                  fontSize: 36,
+                  fontWeight: FontWeight.bold,
+                  color: Color.fromRGBO(0, 0, 128, 1),
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+            Image.asset(
+              'lib/hrc.png',
+              height: 250,
+              width: 250,
+            ),
+            const SizedBox(height: 40),
+
+            // Dropdown to select item
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 40.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    "Select Item",
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
+                  ),
+                  const SizedBox(height: 10),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[200],
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.grey.shade400),
+                    ),
+                    child: DropdownButton<Item>(
+                      isExpanded: true,
+                      value: selectedItem,
+                      items: items.map((Item item) {
+                        return DropdownMenuItem<Item>(
+                          value: item,
+                          child: Text(item.name),
+                        );
+                      }).toList(),
+                      onChanged: (Item? newItem) {
+                        setState(() {
+                          selectedItem = newItem;
+                        });
+                      },
+                      underline: Container(),
+                      dropdownColor: Colors.white,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 30),
+
+            // Dropdown to select action
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 40.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    "Select Action",
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
+                  ),
+                  const SizedBox(height: 10),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[200],
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.grey.shade400),
+                    ),
+                    child: DropdownButton<String>(
+                      isExpanded: true,
+                      value: selectedAction,
+                      items: actions.map((String action) {
+                        return DropdownMenuItem<String>(
+                          value: action,
+                          child: Text(action),
+                        );
+                      }).toList(),
+                      onChanged: (String? newAction) {
+                        setState(() {
+                          selectedAction = newAction!;
+                        });
+                      },
+                      underline: Container(),
+                      dropdownColor: Colors.white,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 50),
+          ],
         ),
       ),
-    );  }
+    );
+  }
 }

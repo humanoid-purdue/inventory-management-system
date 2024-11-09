@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:inventory_management_system/homepage.dart';
 import 'package:inventory_management_system/register_page.dart';
 import 'firebase_options.dart';
 
@@ -21,12 +22,12 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'Inventory Management System',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      home: const MyHomePage(title: 'Inventory Management System'),
     );
   }
 }
@@ -41,27 +42,22 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
-
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
-    });
-  }
+  String emailAddress = '';
+  String password = '';
 
   Future<void> signIn(String emailAddress, String password) async {
     try {
-      final credential = await FirebaseAuth.instance
-          .signInWithEmailAndPassword(email: emailAddress, password: password);
-      print('logged in');
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text("Logged In!"),
-      ));
+      await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: emailAddress,
+        password: password,
+      );
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Logged In!")),
+      );
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => const HomePage()),
+      );
     } on FirebaseAuthException catch (e) {
       if (e.code == 'user-not-found') {
         print('No user found for that email.');
@@ -71,143 +67,115 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
-  String emailAddress = '';
-  String password = '';
-
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
     return Scaffold(
       backgroundColor: Colors.white,
       body: SingleChildScrollView(
         child: Column(
+          mainAxisSize: MainAxisSize.max,
+          mainAxisAlignment: MainAxisAlignment.start,
           children: [
-            SizedBox(
-              height: 140.0,
-            ),
-            Container(
-              child: Center(
-                  child: Text(
-                "Inventory Management System",
+            const SizedBox(height: 100),
+            const Center(
+              child: Text(
+                "Inventory Management",
                 style: TextStyle(
-                    fontSize: 45, color: Color.fromRGBO(0, 0, 128, 10)),
-              )),
-            ),
-            Container(
-              child: Image.asset(
-                'lib/hrc.png',
-                height: 300,
-                width: 300,
+                  fontSize: 40,
+                  fontWeight: FontWeight.bold,
+                  color: Color.fromRGBO(0, 0, 128, 1),
+                ),
               ),
             ),
+            const SizedBox(height: 20),
+            Image.asset(
+              'lib/hrc.png',
+              height: 200,
+              width: 200,
+            ),
+            const SizedBox(height: 30),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 40),
               child: TextField(
                 textAlign: TextAlign.center,
                 keyboardType: TextInputType.emailAddress,
-                onChanged: (value) {
-                  emailAddress = value;
-                },
+                onChanged: (value) => emailAddress = value,
                 decoration: InputDecoration(
                   filled: true,
-                  fillColor: Colors.white60,
+                  fillColor: Colors.grey[200],
                   hintText: 'Enter your email',
-                  contentPadding:
-                      EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
+                  contentPadding: const EdgeInsets.symmetric(
+                    vertical: 14.0,
+                    horizontal: 20.0,
+                  ),
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.all(Radius.circular(32.0)),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: Colors.black, width: 1.0),
-                    borderRadius: BorderRadius.all(Radius.circular(32.0)),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: Colors.black, width: 2.0),
-                    borderRadius: BorderRadius.all(Radius.circular(32.0)),
+                    borderRadius: BorderRadius.circular(32.0),
+                    borderSide: BorderSide.none,
                   ),
                 ),
               ),
             ),
-            SizedBox(
-              height: 8.0,
-            ),
+            const SizedBox(height: 16),
             Padding(
-              padding: EdgeInsets.symmetric(horizontal: 40),
+              padding: const EdgeInsets.symmetric(horizontal: 40),
               child: TextField(
                 textAlign: TextAlign.center,
                 obscureText: true,
-                onChanged: (value) {
-                  password = value;
-                },
+                onChanged: (value) => password = value,
                 decoration: InputDecoration(
                   filled: true,
-                  fillColor: Colors.white60,
+                  fillColor: Colors.grey[200],
                   hintText: 'Enter your password',
-                  contentPadding:
-                      EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
+                  contentPadding: const EdgeInsets.symmetric(
+                    vertical: 14.0,
+                    horizontal: 20.0,
+                  ),
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.all(Radius.circular(32.0)),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: Colors.black, width: 1.0),
-                    borderRadius: BorderRadius.all(Radius.circular(32.0)),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: Colors.black, width: 2.0),
-                    borderRadius: BorderRadius.all(Radius.circular(32.0)),
+                    borderRadius: BorderRadius.circular(32.0),
+                    borderSide: BorderSide.none,
                   ),
                 ),
               ),
             ),
-            SizedBox(
-              height: 42.0,
-            ),
+            const SizedBox(height: 30),
             InkWell(
-              child: new Text("Don't have an account, register."),
+              child: const Text(
+                "Don't have an account? Register here.",
+                style: TextStyle(color: Colors.blue),
+              ),
               onTap: () {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                      builder: (context) => RegisterPage(
-                            title: "Register Page",
-                          )),
+                    builder: (context) => const RegisterPage(title: "Register Page"),
+                  ),
                 );
               },
             ),
-            SizedBox(
-              height: 42.0,
-            ),
+            const SizedBox(height: 40),
             Padding(
-              padding: EdgeInsets.symmetric(vertical: 2.0),
+              padding: const EdgeInsets.symmetric(vertical: 2.0),
               child: Material(
-                color: Color.fromRGBO(255, 188, 33, 10),
-                borderRadius: BorderRadius.all(Radius.circular(32.0)),
+                color: const Color.fromRGBO(255, 188, 33, 1),
+                borderRadius: BorderRadius.circular(32.0),
                 elevation: 5.0,
                 child: MaterialButton(
-                  onPressed: () {
-                    print('pressed');
-                    signIn(emailAddress, password);
-                  },
+                  onPressed: () => signIn(emailAddress, password),
                   minWidth: 330.0,
                   height: 42.0,
-                  child: Text(
-                    style: TextStyle(color: Color.fromRGBO(0, 0, 128, 10)),
+                  child: const Text(
                     'Log In',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18,
+                    ),
                   ),
                 ),
               ),
             ),
-            SizedBox(
-              height: 24.0,
-            ),
+            const SizedBox(height: 20),
           ],
-          mainAxisSize: MainAxisSize.max,
-          mainAxisAlignment: MainAxisAlignment.start,
         ),
       ),
     );
