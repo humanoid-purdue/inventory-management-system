@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'objects/item.dart';
+import 'admin_page.dart'; // Import the AdminPage
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -10,20 +12,17 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  // Variables to hold selected item and action
   String selectedAction = 'borrow';
-
-  // Lists of predefined actions
   final List<String> actions = ['borrow', 'add', 'use'];
-
-  // List of items fetched from Firestore
   List<Item> items = [];
   Item? selectedItem;
+  bool isAdmin = false;
 
   @override
   void initState() {
     super.initState();
     fetchItems();
+    checkIfAdmin();
   }
 
   // Fetch items from Firestore
@@ -44,10 +43,39 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
+  // Check if the current user is an admin
+  Future<void> checkIfAdmin() async {
+    User? user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      final userDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .get();
+      setState(() {
+        isAdmin = userDoc['isAdmin'] ?? false;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
+      appBar: AppBar(
+        title: const Text("Inventory Management System"),
+        actions: [
+          if (isAdmin) // Show Admin button if user is admin
+            IconButton(
+              icon: const Icon(Icons.admin_panel_settings),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => AdminPage()),
+                );
+              },
+            ),
+        ],
+      ),
       body: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.max,
