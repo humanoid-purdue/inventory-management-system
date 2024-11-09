@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'firebase_options.dart';
 
 Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+  print('Firebase initialized');
   runApp(const MyApp());
 }
 
@@ -48,6 +51,28 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
+  Future<void> signIn(String emailAddress, String password) async {
+    try {
+      final credential = await FirebaseAuth.instance.signInWithEmailAndPassword(
+          email: emailAddress,
+          password: password
+      );
+      print('logged in');
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text("Logged In!"),
+      ));
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'user-not-found') {
+        print('No user found for that email.');
+      } else if (e.code == 'wrong-password') {
+        print('Wrong password provided for that user.');
+      }
+    }
+  }
+
+  String emailAddress = '';
+  String password = '';
+
   @override
   Widget build(BuildContext context) {
     // This method is rerun every time setState is called, for instance as done
@@ -85,7 +110,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 textAlign: TextAlign.center,
                 keyboardType: TextInputType.emailAddress,
                 onChanged: (value) {
-                  //Do something with the user input.
+                  emailAddress = value;
                 },
                 decoration: InputDecoration(
                   filled: true,
@@ -116,7 +141,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 textAlign: TextAlign.center,
                 obscureText: true,
                 onChanged: (value) {
-                  //Do something with the user input.
+                  password = value;
                 },
                 decoration: InputDecoration(
                   filled: true,
@@ -149,7 +174,8 @@ class _MyHomePageState extends State<MyHomePage> {
                 elevation: 5.0,
                 child: MaterialButton(
                   onPressed: () {
-                    //Implement login functionality.
+                    print('pressed');
+                    signIn(emailAddress, password);
                   },
                   minWidth: 330.0,
                   height: 42.0,
