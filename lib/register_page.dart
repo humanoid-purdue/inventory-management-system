@@ -1,46 +1,18 @@
-// ignore_for_file: sort_child_properties_last
-
-import 'package:flutter/material.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:inventory_management_system/register_page.dart';
-import 'firebase_options.dart';
+import 'package:flutter/material.dart';
+import 'package:inventory_management_system/homepage.dart';
+import 'package:inventory_management_system/main.dart';
 
-Future<void> main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
-  print('Firebase initialized');
-  runApp(const MyApp());
-}
-
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        useMaterial3: true,
-      ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
-    );
-  }
-}
-
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
+class RegisterPage extends StatefulWidget {
+  const RegisterPage({super.key, required this.title});
 
   final String title;
 
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  State<RegisterPage> createState() => _RegisterPageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
+class _RegisterPageState extends State<RegisterPage> {
   int _counter = 0;
 
   void _incrementCounter() {
@@ -54,13 +26,14 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
-  Future<void> signIn(String emailAddress, String password) async {
+  Future<void> register(String emailAddress, String password) async {
     try {
       final credential = await FirebaseAuth.instance
-          .signInWithEmailAndPassword(email: emailAddress, password: password);
-      print('logged in');
+          .createUserWithEmailAndPassword(
+              email: emailAddress, password: password);
+      print('account created');
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text("Logged In!"),
+        content: Text("Registered Successfully!"),
       ));
     } on FirebaseAuthException catch (e) {
       if (e.code == 'user-not-found') {
@@ -168,14 +141,11 @@ class _MyHomePageState extends State<MyHomePage> {
               height: 42.0,
             ),
             InkWell(
-              child: new Text("Don't have an account, register."),
+              child: new Text("Already have an account? Log in."),
               onTap: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(
-                      builder: (context) => RegisterPage(
-                            title: "Register Page",
-                          )),
+                  MaterialPageRoute(builder: (context) => HomePage()),
                 );
               },
             ),
@@ -191,13 +161,13 @@ class _MyHomePageState extends State<MyHomePage> {
                 child: MaterialButton(
                   onPressed: () {
                     print('pressed');
-                    signIn(emailAddress, password);
+                    register(emailAddress, password);
                   },
                   minWidth: 330.0,
                   height: 42.0,
                   child: Text(
                     style: TextStyle(color: Color.fromRGBO(0, 0, 128, 10)),
-                    'Log In',
+                    'Create Account',
                   ),
                 ),
               ),
