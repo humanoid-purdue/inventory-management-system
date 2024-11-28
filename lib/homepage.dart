@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'objects/item.dart';
-import 'admin_page.dart'; // Import the AdminPage
+import 'admin_page.dart'; //AdminPage
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -13,10 +13,13 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   String selectedAction = 'borrow';
-  final List<String> actions = ['borrow', 'add', 'use'];
+  final List<String> actions = ['borrow', 'use','damaged'];
   List<Item> items = [];
+  
   Item? selectedItem;
-  bool isAdmin = false;
+  bool isAdmin = false; 
+
+  int quantity = 0;
 
   @override
   void initState() {
@@ -24,6 +27,7 @@ class _HomePageState extends State<HomePage> {
     fetchItems();
     checkIfAdmin();
   }
+  
 
   // Fetch items from Firestore
   Future<void> fetchItems() async {
@@ -34,13 +38,16 @@ class _HomePageState extends State<HomePage> {
           uid: doc.id,
           name: doc['name'],
           bin: doc['bin'],
-          building: doc['building'],
+          location: doc['location'],
           quantity: doc['quantity'],
+          type: doc['type'],
           logs: [], // Modify as needed for actual log handling
         );
       }).toList();
-      selectedItem = items.isNotEmpty ? items[0] : null;
+      // selectedItem = items.isNotEmpty ? items[0] : null;
     });
+
+    print("Fetched items: $items");
   }
 
   // Check if the current user is an admin
@@ -53,8 +60,72 @@ class _HomePageState extends State<HomePage> {
           .get();
       setState(() {
         isAdmin = userDoc['isAdmin'] ?? false;
+        if(isAdmin) {
+          actions.add('add');
+        }
       });
     }
+  }
+
+  // Handle item quantity update based on action
+  Future<void> quantityUpdate() async {
+    if (selectedItem == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Please select an item and action.")),
+      );
+      return;
+    }
+
+    final selected = selectedItem;
+    final currentQuantity = selected?.quantity;
+
+    if (selectedAction == 'add') {
+
+      //Admin adds the quantity
+      await updateItemQuantity(selected!, currentQuantity! + quantity);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Quantity successfully updated.')),
+        );
+
+    } else {
+
+      if (quantity > currentQuantity!) {
+        if (currentQuantity == 0) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Insufficient Quantity. Available: 0 .')),
+        );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Insufficient Quantity. Available: $currentQuantity.')),
+        );
+        }
+      } else {
+        final newQuantity = currentQuantity - quantity;
+        await updateItemQuantity(selected!, newQuantity);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Checkout successfully completed!')),
+        );
+      }
+
+    }
+
+    setState(() {
+      quantity = 0;
+    });
+
+  }
+
+  // Update item quantity in Firestore
+  Future<void> updateItemQuantity(Item item, int newQuantity) async {
+    await FirebaseFirestore.instance
+          .collection('items')
+          .doc(item.type)
+          .update({'quantity': newQuantity});
+    
+    setState(() {
+      item.quantity = newQuantity;
+    });
+
   }
 
   @override
@@ -182,7 +253,37 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
 
-            const SizedBox(height: 50),
+            const SizedBox(height: 20),
+
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 40.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('Enter Quantity', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
+                  ),
+                  const SizedBox(height: 10),
+                  TextField(
+                    keyboardType: TextInputType.number,
+                    decoration: InputDecoration(
+                      filled: true,
+                      fillColor: Colors.amber[200],
+                      hintText: "Enter Quantity",
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+
+                    onChanged: (value) {
+                      setState(() {
+                        quantity = int.tryParse(value) ?? 0;
+                      });
+                    },
+
+                  )
+
+                ],
+              ),)
           ],
         ),
       ),
