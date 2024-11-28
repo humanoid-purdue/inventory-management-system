@@ -1,11 +1,13 @@
 // user.dart
 class User {
+  String name;
   String uid;
   String email;
   bool isAdmin;
   List<String> checkedOutItems;
 
   User({
+    required this.name,
     required this.uid,
     required this.email,
     this.isAdmin = false,
@@ -14,6 +16,6 @@ class User {
 
   @override
   String toString() {
-    return 'User(uid: $uid, email: $email, isAdmin: $isAdmin, checkedOutItems: $checkedOutItems)';
+    return 'User(name: $name, uid: $uid, email: $email, isAdmin: $isAdmin, checkedOutItems: $checkedOutItems)';
   }
 }

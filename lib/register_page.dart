@@ -50,6 +50,8 @@ class _RegisterPageState extends State<RegisterPage> {
         print('The password provided is too weak.');
       } else if (e.code == 'email-already-in-use') {
         print('An account already exists for that email.');
+      } else if (e.code == 'invalid-email') {
+        print('The email format is invalid.');
       }
     } catch (e) {
       print(e);
