@@ -3,6 +3,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'objects/item.dart';
 import 'admin_page.dart'; //AdminPage
+import 'dart:math';
+
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -21,6 +23,13 @@ class _HomePageState extends State<HomePage> {
 
   int quantity = 0;
 
+  //controllers for the new item form
+  final TextEditingController nameController = TextEditingController();
+  final TextEditingController binController = TextEditingController();
+  final TextEditingController locationController = TextEditingController();
+  final TextEditingController typeController = TextEditingController();
+  final TextEditingController quantityController = TextEditingController();
+
   @override
   void initState() {
     super.initState();
@@ -28,6 +37,7 @@ class _HomePageState extends State<HomePage> {
     checkIfAdmin();
   }
   
+
 
   // Fetch items from Firestore
   Future<void> fetchItems() async {
@@ -128,6 +138,70 @@ class _HomePageState extends State<HomePage> {
 
   }
 
+  //add new item
+  Future<void> addNewItem() async {
+
+    if (nameController.text.isEmpty || locationController.text.isEmpty || binController.text.isEmpty
+    || quantityController.text.isEmpty || typeController.text.isEmpty) {
+
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Required Fields, Cannot be Empty!')),);
+
+      return;
+
+    } 
+
+    try {
+
+      int newQuantity = int.tryParse(quantityController.text) ?? 0;
+
+      //Create new Firestore Document with randomly generated ID
+      final newDocRef = FirebaseFirestore.instance.collection('items').doc();
+      
+      //Create the new item object
+      final newItem = Item(
+        name: nameController.text, 
+        bin: binController.text, 
+        location: locationController.text, 
+        quantity: newQuantity, 
+        type: typeController.text,
+        logs: [],
+        uid: newDocRef.id,
+      );
+
+      //Save the new item to Firestore
+      await newDocRef.set(newItem.toJson());
+
+      //Refresh the items list
+      await fetchItems();
+
+      //Clear the form fields
+      nameController.clear();
+      locationController.clear();
+      binController.clear();
+      typeController.clear();
+      quantityController.clear();
+
+      setState(() {
+        selectedItem = null;
+        selectedAction = 'borrow';
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Item added successfully!')),
+      );
+
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error adding new item: $e')),
+      );
+    }
+
+  }
+
+    
+    
+  
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -192,12 +266,20 @@ class _HomePageState extends State<HomePage> {
                     child: DropdownButton<Item>(
                       isExpanded: true,
                       value: selectedItem,
-                      items: items.map((Item item) {
+                      items: [
+                        if (selectedAction == 'add') 
+                          const DropdownMenuItem<Item>(
+                            value: null, 
+                            child: Text('New Item'),
+                            ),
+
+                        ...items.map((Item item) {
                         return DropdownMenuItem<Item>(
                           value: item,
                           child: Text(item.name),
                         );
                       }).toList(),
+                      ],
                       onChanged: (Item? newItem) {
                         setState(() {
                           selectedItem = newItem;
@@ -255,8 +337,28 @@ class _HomePageState extends State<HomePage> {
 
             const SizedBox(height: 20),
 
+            //Form to add new item
+
+            // ignore: unrelated_type_equality_checks
+            if (selectedAction == 'add' && selectedItem == null) 
+
+              Padding(padding: const EdgeInsets.symmetric(horizontal: 40.0), child: Column(children: [
+                TextField(controller: nameController, decoration: const InputDecoration(labelText: 'Item Name'),),
+                TextField(controller: binController, decoration: const InputDecoration(labelText: 'Item Bin'),),
+                TextField(controller: locationController, decoration: const InputDecoration(labelText: 'Item Bin Location'),),
+                TextField(controller: typeController, decoration: const InputDecoration(labelText: 'Item Type'),),
+                TextField(controller: quantityController, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Item Quantity'),),
+
+                const SizedBox(height: 20),
+                ElevatedButton(onPressed: () {
+                  addNewItem(); // Call _addNewItem without any arguments
+                }, child: const Text('Add Item'))
+
+
+              ],),),
+
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 40.0),
+              padding: const EdgeInsets.symmetric(horizontal: 40.0, vertical:40.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -283,7 +385,14 @@ class _HomePageState extends State<HomePage> {
                   )
 
                 ],
-              ),)
+
+
+              ),),
+
+              const SizedBox(height: 20),
+                ElevatedButton(onPressed: quantityUpdate, child: const Text('Submit')),
+                const SizedBox(height: 80)
+
           ],
         ),
       ),
