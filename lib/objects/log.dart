@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class Log {
-  final int action;
+  final String action;
   final String user;
   final DateTime date;
   final bool approved;
@@ -16,7 +16,7 @@ class Log {
   // Factory constructor to create a Log object from Firestore data
   factory Log.fromFirestore(Map<String, dynamic> data) {
     return Log(
-      action: data['action'] as int,
+      action: data['action'],
       user: data['user'] as String,
       date: (data['date'] as Timestamp).toDate(),
       approved: data['approved'] as bool,
