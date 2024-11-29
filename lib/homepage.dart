@@ -3,7 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'objects/item.dart';
 import 'admin_page.dart'; //AdminPage
-import 'dart:math';
+import 'objects/log.dart';
 
 
 class HomePage extends StatefulWidget {
@@ -56,8 +56,6 @@ class _HomePageState extends State<HomePage> {
       }).toList();
       // selectedItem = items.isNotEmpty ? items[0] : null;
     });
-
-    print("Fetched items: $items");
   }
 
   // Check if the current user is an admin
@@ -88,11 +86,17 @@ class _HomePageState extends State<HomePage> {
 
     final selected = selectedItem;
     final currentQuantity = selected?.quantity;
+    final User? currentUser = FirebaseAuth.instance.currentUser;
+
+    Log newLog = Log(action: selectedAction, user: currentUser!.uid, date: DateTime.now(), approved: false, );
+
+
 
     if (selectedAction == 'add') {
 
       //Admin adds the quantity
       await updateItemQuantity(selected!, currentQuantity! + quantity);
+      await addLogToFirestore(selected!.uid, newLog);
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Quantity successfully updated.')),
         );
@@ -112,6 +116,7 @@ class _HomePageState extends State<HomePage> {
       } else {
         final newQuantity = currentQuantity - quantity;
         await updateItemQuantity(selected!, newQuantity);
+        await addLogToFirestore(selected!.uid, newLog);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Checkout successfully completed!')),
         );
@@ -121,20 +126,33 @@ class _HomePageState extends State<HomePage> {
 
     setState(() {
       quantity = 0;
+      selectedItem = null;
     });
 
+  }
+
+  //adding the logs to Firestore
+  Future<void> addLogToFirestore(String itemID, Log log) async {
+    await FirebaseFirestore.instance
+          .collection('items')
+          .doc(itemID)
+          .collection('logs')
+          .add(log.toJson());
+    
   }
 
   // Update item quantity in Firestore
   Future<void> updateItemQuantity(Item item, int newQuantity) async {
     await FirebaseFirestore.instance
           .collection('items')
-          .doc(item.type)
+          .doc(item.uid)
           .update({'quantity': newQuantity});
     
     setState(() {
       item.quantity = newQuantity;
     });
+
+    await fetchItems();
 
   }
 
@@ -390,7 +408,7 @@ class _HomePageState extends State<HomePage> {
               ),),
 
               const SizedBox(height: 20),
-                ElevatedButton(onPressed: quantityUpdate, child: const Text('Submit')),
+                ElevatedButton(onPressed: (selectedItem != null && quantity >= 0) ? quantityUpdate : null, child: const Text('Submit')),
                 const SizedBox(height: 80)
 
           ],
